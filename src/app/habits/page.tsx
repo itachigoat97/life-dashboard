@@ -22,7 +22,11 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" as const },
+  },
 };
 
 export default function HabitsPage() {
@@ -99,7 +103,7 @@ export default function HabitsPage() {
       100
   ) / 100;
 
-  // Contribution Calendar Component
+  // Contribution Calendar Component - GITHUB STYLE (COLUMNS)
   const ContributionCalendar = ({ habitId }: { habitId: string }) => {
     const logs = getHabitLogsForLastSixtyDays(habitId);
     const habit = mockHabits.find((h) => h.id === habitId);
@@ -119,9 +123,9 @@ export default function HabitsPage() {
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
-    // Group dates into weeks (7 days per row, with first week potentially incomplete)
-    const weeks: Date[][] = [];
-    let currentWeek: Date[] = [];
+    // Group dates into columns (each column = 1 week, 7 rows for days of week)
+    const columns: Date[][] = [];
+    let currentColumn: Date[] = [];
 
     // Start from Monday of the first week
     const firstDate = new Date(dates[0]);
@@ -129,33 +133,33 @@ export default function HabitsPage() {
     const daysToAdd = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
     for (let i = 0; i < daysToAdd; i++) {
-      currentWeek.push(new Date(0)); // Placeholder for padding
+      currentColumn.push(new Date(0)); // Placeholder for padding
     }
 
     for (const date of dates) {
-      currentWeek.push(new Date(date));
-      if (currentWeek.length === 7) {
-        weeks.push(currentWeek);
-        currentWeek = [];
+      currentColumn.push(new Date(date));
+      if (currentColumn.length === 7) {
+        columns.push(currentColumn);
+        currentColumn = [];
       }
     }
 
-    if (currentWeek.length > 0) {
-      weeks.push(currentWeek);
+    if (currentColumn.length > 0) {
+      columns.push(currentColumn);
     }
 
     return (
       <div className="space-y-2">
-        <p className="text-xs text-white/60 font-medium">Last 60 days</p>
-        <div className="overflow-x-auto">
-          <div className="flex flex-col gap-1 w-fit">
-            {weeks.map((week, weekIdx) => (
-              <div key={weekIdx} className="flex gap-1">
-                {week.map((date, dayIdx) => {
+        <p className="text-xs text-white/60 font-medium">Ultimi 60 giorni</p>
+        <div className="overflow-x-auto pb-2">
+          <div className="flex gap-1 w-fit">
+            {columns.map((column, colIdx) => (
+              <div key={colIdx} className="flex flex-col gap-1">
+                {column.map((date, dayIdx) => {
                   if (date.getTime() === 0) {
                     return (
                       <div
-                        key={`${weekIdx}-${dayIdx}-empty`}
+                        key={`${colIdx}-${dayIdx}-empty`}
                         className="w-3 h-3 rounded-sm"
                       />
                     );
@@ -165,20 +169,24 @@ export default function HabitsPage() {
                   const isCompleted = logs[dateISO] || false;
 
                   return (
-                    <div
+                    <motion.div
                       key={dateISO}
                       title={dateISO}
                       className={cn(
-                        "w-3 h-3 rounded-sm transition-colors cursor-pointer",
+                        "w-3 h-3 rounded-sm transition-all cursor-pointer hover:scale-125",
                         isCompleted
-                          ? "opacity-100"
-                          : "opacity-40 bg-white/[0.06]",
+                          ? "shadow-lg"
+                          : "opacity-40 bg-white/[0.06]"
                       )}
                       style={
                         isCompleted
-                          ? { backgroundColor: categoryColor }
+                          ? {
+                              backgroundColor: categoryColor,
+                              boxShadow: `0 0 8px ${categoryColor}`,
+                            }
                           : undefined
                       }
+                      whileHover={{ scale: 1.25 }}
                     />
                   );
                 })}
@@ -192,15 +200,15 @@ export default function HabitsPage() {
 
   return (
     <motion.div
-      className="min-h-screen bg-[#0a0a0a] p-6"
+      className="space-y-8"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
-      <motion.div variants={itemVariants} className="max-w-6xl mx-auto space-y-8">
+      <motion.div variants={itemVariants} className="space-y-8">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-white">Habits</h1>
+          <h1 className="text-4xl font-bold text-white">Abitudini</h1>
           <p className="text-white/60">Traccia le tue abitudini quotidiane</p>
         </div>
 
@@ -209,39 +217,65 @@ export default function HabitsPage() {
           variants={itemVariants}
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
-          <Card className="border-white/[0.08] bg-white/[0.03]">
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <p className="text-white/60 text-sm font-medium">Total Habits</p>
-                <p className="text-3xl font-bold text-white">{totalHabits}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/[0.08] bg-white/[0.03]">
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <p className="text-white/60 text-sm font-medium">
-                  Avg Completion Rate
-                </p>
-                <p className="text-3xl font-bold text-white">
-                  {averageCompletion}%
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-white/[0.08] bg-white/[0.03]">
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <p className="text-white/60 text-sm font-medium">Best Streak</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-3xl font-bold text-white">{bestStreak}</p>
-                  <Flame className="w-6 h-6 text-[#d4af37]" />
+          <motion.div variants={itemVariants}>
+            <Card className="border-white/[0.06] bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-xl">
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-white/60 text-sm font-medium">Totale abitudini</p>
+                  <p className="text-3xl font-bold text-white">{totalHabits}</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <Card className="border-white/[0.06] bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-xl">
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <p className="text-white/60 text-sm font-medium">
+                    Tasso completamento
+                  </p>
+                  <p className="text-3xl font-bold text-white">
+                    {averageCompletion}%
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <Card className="border-white/[0.06] bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#d4af37]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <CardContent className="pt-6 relative">
+                <div className="space-y-2">
+                  <p className="text-white/60 text-sm font-medium">Miglior streak</p>
+                  <div className="flex items-center gap-2">
+                    <motion.div
+                      animate={{
+                        textShadow: [
+                          "0 0 10px #d4af37",
+                          "0 0 20px #d4af37",
+                          "0 0 10px #d4af37",
+                        ],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <p className="text-3xl font-bold text-white">{bestStreak}</p>
+                    </motion.div>
+                    <motion.div
+                      animate={{
+                        y: [0, -4, 0],
+                        rotate: [0, 12, 0],
+                      }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                    >
+                      <Flame className="w-6 h-6 text-[#d4af37]" />
+                    </motion.div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
 
         {/* Habits Grid */}
@@ -249,7 +283,7 @@ export default function HabitsPage() {
           variants={itemVariants}
           className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
-          {mockHabits.map((habit) => {
+          {mockHabits.map((habit, idx) => {
             const streak = getStreakForHabit(habit.id);
             const weekCompletion = getCompletionRateThisWeek(habit.id);
             const monthCompletion = getCompletionRateLastThirtyDays(habit.id);
@@ -259,8 +293,9 @@ export default function HabitsPage() {
               <motion.div
                 key={habit.id}
                 variants={itemVariants}
+                transition={{ delay: idx * 0.05 }}
               >
-                <Card className="border-white/[0.08] bg-white/[0.03] h-full">
+                <Card className="border-white/[0.06] bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-xl h-full">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3 flex-1">
@@ -276,16 +311,22 @@ export default function HabitsPage() {
                               categoryInfo?.borderColor,
                               categoryInfo?.textColor
                             )}
-                            variant="outline"
+                            variant="default"
                           >
                             {categoryInfo?.emoji} {categoryInfo?.name}
                           </Badge>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1">
+                      <motion.div
+                        className="flex items-center gap-1"
+                        animate={{
+                          y: [0, -2, 0],
+                        }}
+                        transition={{ duration: 0.8, repeat: Infinity }}
+                      >
                         <Flame className="w-5 h-5 text-[#d4af37]" />
                         <span className="font-bold text-white">{streak}</span>
-                      </div>
+                      </motion.div>
                     </div>
                   </CardHeader>
 
@@ -293,15 +334,24 @@ export default function HabitsPage() {
                     {/* Weekly Progress */}
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-white/60">This Week</p>
+                        <p className="text-sm text-white/60">Questa settimana</p>
                         <p className="text-sm font-medium text-white">
-                          {weekCompletion}/{habit.target_per_week} days
+                          {weekCompletion}/{habit.target_per_week} giorni
                         </p>
                       </div>
-                      <Progress
-                        value={(weekCompletion / habit.target_per_week) * 100}
-                        className="h-2 bg-white/[0.08]"
-                      />
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 0.6, ease: "easeOut" as const }}
+                      >
+                        <Progress
+                          value={(weekCompletion / habit.target_per_week) * 100}
+                          className="h-2 bg-white/[0.08]"
+                          style={{
+                            "--progress-background": categoryInfo?.color || "#d4af37",
+                          } as React.CSSProperties}
+                        />
+                      </motion.div>
                     </div>
 
                     {/* Contribution Calendar */}
@@ -313,17 +363,26 @@ export default function HabitsPage() {
                         <div className="flex items-center gap-2">
                           <TrendingUp className="w-4 h-4 text-white/60" />
                           <p className="text-sm text-white/60">
-                            Monthly Completion
+                            Completamento mensile
                           </p>
                         </div>
                         <p className="text-sm font-bold text-white">
                           {monthCompletion}%
                         </p>
                       </div>
-                      <Progress
-                        value={monthCompletion}
-                        className="h-2 bg-white/[0.08]"
-                      />
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: "100%" }}
+                        transition={{ duration: 0.6, ease: "easeOut" as const }}
+                      >
+                        <Progress
+                          value={monthCompletion}
+                          className="h-2 bg-white/[0.08]"
+                          style={{
+                            "--progress-background": categoryInfo?.color || "#d4af37",
+                          } as React.CSSProperties}
+                        />
+                      </motion.div>
                     </div>
                   </CardContent>
                 </Card>
@@ -334,33 +393,53 @@ export default function HabitsPage() {
 
         {/* Today's Habits */}
         <motion.div variants={itemVariants}>
-          <Card className="border-white/[0.08] bg-white/[0.03]">
+          <Card className="border-white/[0.06] bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-xl">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-[#d4af37]" />
-                <CardTitle className="text-white">Today&apos;s Habits</CardTitle>
+                <CardTitle className="text-white">Abitudini di Oggi</CardTitle>
               </div>
             </CardHeader>
 
             <CardContent>
               <div className="space-y-4">
-                {mockHabits.map((habit) => {
+                {mockHabits.map((habit, idx) => {
                   const isCompletedToday = getTodayCompletion(habit.id);
                   const categoryInfo = CATEGORIES[habit.category];
 
                   return (
-                    <div
+                    <motion.div
                       key={habit.id}
+                      variants={itemVariants}
+                      transition={{ delay: idx * 0.05 }}
                       className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] transition-colors"
                     >
-                      {isCompletedToday ? (
-                        <CheckCircle2
-                          className="w-6 h-6 flex-shrink-0"
-                          style={{ color: categoryInfo?.color || "#d4af37" }}
-                        />
-                      ) : (
-                        <Circle className="w-6 h-6 flex-shrink-0 text-white/30" />
-                      )}
+                      <motion.div
+                        animate={{
+                          scale: isCompletedToday ? [1, 1.2, 1] : 1,
+                        }}
+                        transition={{ duration: 0.4, ease: "easeOut" as const }}
+                      >
+                        {isCompletedToday ? (
+                          <motion.div
+                            animate={{
+                              boxShadow: [
+                                `0 0 0px ${categoryInfo?.color || "#d4af37"}`,
+                                `0 0 8px ${categoryInfo?.color || "#d4af37"}`,
+                                `0 0 0px ${categoryInfo?.color || "#d4af37"}`,
+                              ],
+                            }}
+                            transition={{ duration: 0.8, repeat: Infinity }}
+                          >
+                            <CheckCircle2
+                              className="w-6 h-6 flex-shrink-0"
+                              style={{ color: categoryInfo?.color || "#d4af37" }}
+                            />
+                          </motion.div>
+                        ) : (
+                          <Circle className="w-6 h-6 flex-shrink-0 text-white/30" />
+                        )}
+                      </motion.div>
                       <span className="text-xl">{habit.emoji || "✨"}</span>
                       <div className="flex-1">
                         <p
@@ -375,14 +454,23 @@ export default function HabitsPage() {
                         </p>
                       </div>
                       {isCompletedToday && (
-                        <Badge
-                          className="bg-white/[0.1] text-white border-white/[0.2]"
-                          variant="outline"
+                        <motion.div
+                          initial={{ opacity: 0, x: 10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ ease: "easeOut" as const }}
                         >
-                          ✓ Done
-                        </Badge>
+                          <Badge
+                            className={cn(
+                              "border-white/[0.2]",
+                              categoryInfo?.bgColor
+                            )}
+                            variant="outline"
+                          >
+                            ✓ Completato
+                          </Badge>
+                        </motion.div>
                       )}
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>

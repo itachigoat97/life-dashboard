@@ -17,9 +17,9 @@ import { useState } from "react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/days", label: "Daily Log", icon: CalendarDays },
-  { href: "/habits", label: "Habits", icon: Repeat },
-  { href: "/goals", label: "Goals", icon: Target },
+  { href: "/days", label: "Registro", icon: CalendarDays },
+  { href: "/habits", label: "Abitudini", icon: Repeat },
+  { href: "/goals", label: "Obiettivi", icon: Target },
 ];
 
 export function Sidebar() {

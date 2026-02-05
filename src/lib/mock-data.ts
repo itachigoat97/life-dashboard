@@ -1,5 +1,11 @@
 import { Day, Activity, Habit, HabitLog, Goal, Category } from "@/types";
 
+// Seeded PRNG for deterministic values (avoids hydration mismatch)
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed + 1) * 10000;
+  return x - Math.floor(x);
+}
+
 const today = new Date();
 const toISO = (d: Date) => d.toISOString().split("T")[0];
 const daysAgo = (n: number) => {
@@ -8,10 +14,12 @@ const daysAgo = (n: number) => {
   return d;
 };
 
+const energyLevels = [8, 6, 9, 7, 8, 6, 7, 9, 8, 7, 6, 8, 9, 7];
+
 export const mockDays: Day[] = Array.from({ length: 14 }, (_, i) => ({
   id: `day-${i}`,
   date: toISO(daysAgo(i)),
-  energy_level: Math.floor(Math.random() * 4) + 6,
+  energy_level: energyLevels[i],
   notes:
     i === 0
       ? "Giornata produttiva! Sessione focus mattutina eccezionale."
@@ -35,7 +43,7 @@ const activityTemplates: {
   },
   {
     category: "anima",
-    title: "Journaling gratitudine",
+    title: "Diario della gratitudine",
     description: "3 cose per cui sono grato",
   },
   {
@@ -45,13 +53,13 @@ const activityTemplates: {
   },
   {
     category: "mente",
-    title: "Coding session",
-    description: "Feature development su progetto principale",
+    title: "Sessione di coding",
+    description: "Sviluppo feature su progetto principale",
   },
   {
     category: "mente",
     title: "Studio TypeScript",
-    description: "Advanced patterns e generics",
+    description: "Pattern avanzati e generics",
   },
   {
     category: "cuore",
@@ -80,12 +88,12 @@ const activityTemplates: {
   },
   {
     category: "abito",
-    title: "Content creation",
+    title: "Creazione contenuti",
     description: "Post LinkedIn + stories IG",
   },
   {
     category: "abito",
-    title: "Skincare routine",
+    title: "Routine skincare",
     description: "Routine completa mattina e sera",
   },
   {
@@ -100,21 +108,24 @@ const activityTemplates: {
   },
   {
     category: "portafoglio",
-    title: "Business development",
-    description: "Outreach 5 potenziali clienti",
+    title: "Sviluppo business",
+    description: "Contatto con 5 potenziali clienti",
   },
 ];
 
 export const mockActivities: Activity[] = mockDays.flatMap((day, dayIdx) => {
-  const count = Math.floor(Math.random() * 3) + 3;
-  const shuffled = [...activityTemplates].sort(() => Math.random() - 0.5);
+  const count = Math.floor(seededRandom(dayIdx * 100) * 3) + 3;
+  const shuffled = [...activityTemplates].sort(
+    (a, b) => seededRandom(dayIdx * 50 + activityTemplates.indexOf(a)) -
+              seededRandom(dayIdx * 50 + activityTemplates.indexOf(b))
+  );
   return shuffled.slice(0, count).map((tmpl, i) => ({
     id: `act-${dayIdx}-${i}`,
     day_id: day.id,
     category: tmpl.category,
     title: tmpl.title,
     description: tmpl.description,
-    completed: Math.random() > 0.15,
+    completed: seededRandom(dayIdx * 200 + i) > 0.15,
     created_at: day.created_at,
   }));
 });
@@ -146,7 +157,7 @@ export const mockHabits: Habit[] = [
   },
   {
     id: "hab-4",
-    name: "Journaling",
+    name: "Diario",
     category: "anima",
     emoji: "📝",
     target_per_week: 7,
@@ -170,7 +181,7 @@ export const mockHabits: Habit[] = [
   },
   {
     id: "hab-7",
-    name: "No sugar",
+    name: "Niente zucchero",
     category: "corpo",
     emoji: "🚫",
     target_per_week: 7,
@@ -187,9 +198,10 @@ export const mockHabits: Habit[] = [
 ];
 
 export const mockHabitLogs: HabitLog[] = [];
-for (const habit of mockHabits) {
+for (let hIdx = 0; hIdx < mockHabits.length; hIdx++) {
+  const habit = mockHabits[hIdx];
   for (let i = 0; i < 60; i++) {
-    const rand = Math.random();
+    const rand = seededRandom(hIdx * 1000 + i);
     const threshold =
       habit.target_per_week >= 7 ? 0.75 : habit.target_per_week >= 5 ? 0.65 : 0.4;
     mockHabitLogs.push({
