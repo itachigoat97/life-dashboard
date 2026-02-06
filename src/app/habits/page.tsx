@@ -8,26 +8,7 @@ import { useData } from "@/lib/data-context";
 import { cn, toISODate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Flame, CheckCircle2, Circle, Calendar, TrendingUp } from "lucide-react";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" as const },
-  },
-};
+import { containerVariants, itemVariants } from "@/lib/animations";
 
 export default function HabitsPage() {
   const { loading, habits, habitLogs, toggleHabitLog, streakFor } = useData();

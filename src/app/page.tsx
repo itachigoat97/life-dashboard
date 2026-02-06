@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { useData } from "@/lib/data-context";
 import { CATEGORIES, Category } from "@/types";
 import { formatDate, toISODate } from "@/lib/utils";
+import { containerVariants, itemVariants, slideInVariants } from "@/lib/animations";
 import {
   Zap,
   Activity as ActivityIcon,
@@ -25,29 +26,6 @@ import {
   Circle,
   Sparkles,
 } from "lucide-react";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut" as const,
-    },
-  },
-};
 
 const glowVariants = {
   hidden: { opacity: 0, scale: 0.95 },
@@ -69,19 +47,6 @@ const glowVariants = {
       repeat: Infinity,
     },
   },
-};
-
-const slideInVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: {
-      delay: i * 0.1,
-      duration: 0.5,
-      ease: "easeOut" as const,
-    },
-  }),
 };
 
 const counterVariants = {

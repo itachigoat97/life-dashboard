@@ -8,32 +8,10 @@ import { formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { CalendarDays, Zap, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
+import { containerVariants, itemVariants } from "@/lib/animations";
 
 export default function DaysPage() {
   const { loading, days } = useData();
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut" as const,
-      },
-    },
-  };
 
   const energyDotVariants = {
     initial: { scale: 0.8, opacity: 0 },

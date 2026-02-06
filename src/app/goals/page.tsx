@@ -15,27 +15,8 @@ import { Progress } from "@/components/ui/progress";
 import { useData } from "@/lib/data-context";
 import { CATEGORIES, Category } from "@/types";
 import { cn } from "@/lib/utils";
+import { containerVariants, itemVariants } from "@/lib/animations";
 import { Target, TrendingUp, Award } from "lucide-react";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4, ease: "easeOut" as const },
-  },
-};
 
 export default function GoalsPage() {
   const { loading, goals, wheelData } = useData();

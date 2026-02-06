@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Zap, CheckCircle2, Circle, FileText } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { containerVariants, itemVariants } from "@/lib/animations";
 
 export default function DayDetailPage() {
   const params = useParams();
@@ -41,29 +42,6 @@ export default function DayDetailPage() {
     if (level <= 5) return "shadow-orange-500/30";
     if (level <= 7) return "shadow-amber-500/30";
     return "shadow-emerald-500/30";
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.5,
-        ease: "easeOut" as const,
-      },
-    },
   };
 
   if (loading) {
