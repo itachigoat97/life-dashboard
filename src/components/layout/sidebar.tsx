@@ -14,7 +14,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -24,9 +23,13 @@ const navItems = [
   { href: "/monthly-goals", label: "Mensili", icon: BarChart3 },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+}
+
+export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <>
@@ -122,7 +125,7 @@ export function Sidebar() {
 
         {/* Collapse toggle */}
         <button
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={onToggleCollapse}
           className="flex items-center justify-center p-3 mx-3 mb-4 rounded-lg text-zinc-500 hover:text-white hover:bg-white/[0.04] transition-colors"
         >
           {collapsed ? (
