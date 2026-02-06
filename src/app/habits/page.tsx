@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { CATEGORIES } from "@/types";
-import { mockHabits, mockHabitLogs, getStreakForHabit } from "@/lib/mock-data";
+import { useData } from "@/lib/data-context";
 import { cn, toISODate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Flame, CheckCircle2, Circle, Calendar, TrendingUp } from "lucide-react";
@@ -30,6 +30,8 @@ const itemVariants = {
 };
 
 export default function HabitsPage() {
+  const { loading, habits, habitLogs, toggleHabitLog, streakFor } = useData();
+
   const today = new Date();
   const todayISO = toISODate(today);
 
@@ -38,7 +40,7 @@ export default function HabitsPage() {
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const weekLogs = mockHabitLogs.filter(
+    const weekLogs = habitLogs.filter(
       (log) =>
         log.habit_id === habitId &&
         new Date(log.date) >= sevenDaysAgo &&
@@ -53,7 +55,7 @@ export default function HabitsPage() {
     const thirtyDaysAgo = new Date(today);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const totalLogs = mockHabitLogs.filter(
+    const totalLogs = habitLogs.filter(
       (log) =>
         log.habit_id === habitId &&
         new Date(log.date) >= thirtyDaysAgo &&
@@ -76,7 +78,7 @@ export default function HabitsPage() {
 
     while (currentDate <= today) {
       const dateISO = toISODate(currentDate);
-      const log = mockHabitLogs.find(
+      const log = habitLogs.find(
         (l) => l.habit_id === habitId && l.date === dateISO
       );
       logs[dateISO] = log ? log.completed : false;
@@ -87,26 +89,47 @@ export default function HabitsPage() {
   };
 
   const getTodayCompletion = (habitId: string) => {
-    const todayLog = mockHabitLogs.find(
+    const todayLog = habitLogs.find(
       (log) => log.habit_id === habitId && log.date === todayISO
     );
     return todayLog ? todayLog.completed : false;
   };
 
-  const allStreaks = mockHabits.map((habit) => getStreakForHabit(habit.id));
+  const allStreaks = habits.map((habit) => streakFor(habit.id));
   const bestStreak = Math.max(...allStreaks, 0);
 
-  const totalHabits = mockHabits.length;
+  const totalHabits = habits.length;
   const averageCompletion = Math.round(
-    (mockHabits.reduce((sum, habit) => sum + getCompletionRateLastThirtyDays(habit.id), 0) /
-      Math.max(mockHabits.length, 1)) *
+    (habits.reduce((sum, habit) => sum + getCompletionRateLastThirtyDays(habit.id), 0) /
+      Math.max(habits.length, 1)) *
       100
   ) / 100;
+
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-10 w-48 rounded bg-white/[0.05]" />
+          <div className="h-5 w-72 rounded bg-white/[0.05]" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 rounded-xl bg-white/[0.05]" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-64 rounded-xl bg-white/[0.05]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // Contribution Calendar Component - GITHUB STYLE (COLUMNS)
   const ContributionCalendar = ({ habitId }: { habitId: string }) => {
     const logs = getHabitLogsForLastSixtyDays(habitId);
-    const habit = mockHabits.find((h) => h.id === habitId);
+    const habit = habits.find((h) => h.id === habitId);
 
     if (!habit) return null;
 
@@ -283,8 +306,8 @@ export default function HabitsPage() {
           variants={itemVariants}
           className="grid grid-cols-1 lg:grid-cols-2 gap-6"
         >
-          {mockHabits.map((habit, idx) => {
-            const streak = getStreakForHabit(habit.id);
+          {habits.map((habit, idx) => {
+            const streak = streakFor(habit.id);
             const weekCompletion = getCompletionRateThisWeek(habit.id);
             const monthCompletion = getCompletionRateLastThirtyDays(habit.id);
             const categoryInfo = CATEGORIES[habit.category];
@@ -403,16 +426,17 @@ export default function HabitsPage() {
 
             <CardContent>
               <div className="space-y-4">
-                {mockHabits.map((habit, idx) => {
+                {habits.map((habit, idx) => {
                   const isCompletedToday = getTodayCompletion(habit.id);
                   const categoryInfo = CATEGORIES[habit.category];
 
                   return (
                     <motion.div
                       key={habit.id}
+                      onClick={() => toggleHabitLog(habit.id, todayISO)}
                       variants={itemVariants}
                       transition={{ delay: idx * 0.05 }}
-                      className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-lg bg-white/[0.02] hover:bg-white/[0.05] transition-colors cursor-pointer"
                     >
                       <motion.div
                         animate={{

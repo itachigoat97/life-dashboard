@@ -1,9 +1,9 @@
 "use client";
 
+import { useData } from "@/lib/data-context";
+import { CATEGORIES, Category } from "@/types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CATEGORIES, Category } from "@/types";
-import { getDayByDate, getActivitiesForDay } from "@/lib/mock-data";
 import { formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { ArrowLeft, Zap, CheckCircle2, Circle, FileText } from "lucide-react";
@@ -14,8 +14,9 @@ export default function DayDetailPage() {
   const params = useParams();
   const date = params.date as string;
 
-  const day = getDayByDate(date);
-  const activities = day ? getActivitiesForDay(day.id) : [];
+  const { loading, days } = useData();
+  const day = days.find((d) => d.date === date) || null;
+  const activities = day?.activities || [];
 
   const activitiesByCategory = activities.reduce(
     (acc, activity) => {
@@ -64,6 +65,17 @@ export default function DayDetailPage() {
       },
     },
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-6 w-32 rounded bg-white/[0.05]" />
+        <div className="h-40 rounded-xl bg-white/[0.05]" />
+        <div className="h-24 rounded-xl bg-white/[0.05]" />
+        <div className="h-60 rounded-xl bg-white/[0.05]" />
+      </div>
+    );
+  }
 
   if (!day) {
     return (

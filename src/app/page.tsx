@@ -12,20 +12,12 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useData } from "@/lib/data-context";
 import { CATEGORIES, Category } from "@/types";
-import {
-  mockDays,
-  mockActivities,
-  mockHabits,
-  getWheelOfLifeData,
-  getStreakForHabit,
-  getActivitiesForDay,
-  getHabitLogsForDate,
-} from "@/lib/mock-data";
 import { formatDate, toISODate } from "@/lib/utils";
 import {
   Zap,
-  Activity,
+  Activity as ActivityIcon,
   Flame,
   TrendingUp,
   Calendar,
@@ -124,37 +116,52 @@ const AnimatedCounter = ({ value }: { value: number }) => {
 };
 
 export default function Dashboard() {
+  const { loading, days, habits, habitLogs, recentActivities, wheelData, streakFor } = useData();
+
   const today = new Date();
   const todayDate = toISODate(today);
-  const todayDay = mockDays.find((d) => d.date === todayDate) || mockDays[0];
-  const todayActivities = getActivitiesForDay(todayDay.id);
-  const todayHabitLogs = getHabitLogsForDate(todayDate);
+  const todayDay = days.find((d) => d.date === todayDate) || days[0] || null;
+  const todayActivities = todayDay?.activities || [];
+  const todayHabitLogs = habitLogs.filter((l) => l.date === todayDate);
+  const energyLevel = todayDay?.energy_level ?? 0;
 
   // Calculate stats
   const completedActivities = todayActivities.filter((a) => a.completed).length;
   const totalActivities = todayActivities.length;
-  const totalStreaks = mockHabits.reduce((sum, habit) => {
-    return sum + getStreakForHabit(habit.id);
-  }, 0);
+  const totalStreaks = habits.reduce((sum, habit) => sum + streakFor(habit.id), 0);
 
-  // Get wheel of life data
-  const wheelData = getWheelOfLifeData();
+  // Get wheel of life data formatted for chart
   const chartData = wheelData.map((item) => ({
     ...item,
     category: CATEGORIES[item.category as Category].emoji,
   }));
 
   // Get unique habit streaks for display
-  const habitsWithStreaks = mockHabits.map((habit) => ({
+  const habitsWithStreaks = habits.map((habit) => ({
     ...habit,
-    streak: getStreakForHabit(habit.id),
-    completed: todayHabitLogs.some((log) => log.habit_id === habit.id),
+    streak: streakFor(habit.id),
+    completed: todayHabitLogs.some((log) => log.habit_id === habit.id && log.completed),
   }));
 
-  // Get recent activities (last 5)
-  const recentActivities = mockActivities.slice(0, 5);
+  const energyPercentage = (energyLevel / 10) * 100;
 
-  const energyPercentage = (todayDay.energy_level / 10) * 100;
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="h-32 rounded-xl bg-white/[0.05]" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="h-80 rounded-xl bg-white/[0.05]" />
+          <div className="lg:col-span-2 grid grid-cols-2 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-36 rounded-xl bg-white/[0.05]" />
+            ))}
+          </div>
+        </div>
+        <div className="h-48 rounded-xl bg-white/[0.05]" />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -211,7 +218,7 @@ export default function Dashboard() {
               <div className="relative w-full h-full rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/20 backdrop-blur-xl flex items-center justify-center">
                 <div className="text-center">
                   <div className="text-4xl font-bold text-white">
-                    <AnimatedCounter value={todayDay.energy_level} />
+                    <AnimatedCounter value={energyLevel} />
                   </div>
                   <div className="text-xs text-zinc-400 mt-1">/10</div>
                 </div>
@@ -297,7 +304,7 @@ export default function Dashboard() {
                 <CardContent>
                   <div className="mb-4">
                     <p className="text-4xl font-bold text-white">
-                      <AnimatedCounter value={todayDay.energy_level} />
+                      <AnimatedCounter value={energyLevel} />
                     </p>
                     <p className="text-xs text-zinc-500 mt-1">su 10</p>
                   </div>
@@ -325,7 +332,7 @@ export default function Dashboard() {
               <Card className="border-white/[0.06] bg-gradient-to-br from-blue-500/10 via-white/[0.05] to-white/[0.02] backdrop-blur-xl h-full hover:border-blue-400/30 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-zinc-300 flex items-center gap-2">
-                    <Activity className="w-4 h-4 text-blue-400" />
+                    <ActivityIcon className="w-4 h-4 text-blue-400" />
                     Attività
                   </CardTitle>
                 </CardHeader>
@@ -390,7 +397,7 @@ export default function Dashboard() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-4xl font-bold text-white">
-                    <AnimatedCounter value={mockDays.length} />
+                    <AnimatedCounter value={days.length} />
                   </p>
                   <p className="text-xs text-zinc-500 mt-3">nel database</p>
                 </CardContent>
@@ -508,7 +515,7 @@ export default function Dashboard() {
         <Card className="border-white/[0.06] bg-gradient-to-br from-white/[0.05] to-white/[0.02] backdrop-blur-xl hover:border-white/[0.12] hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <CardTitle className="text-white flex items-center gap-2">
-              <Activity className="w-5 h-5 text-blue-400" />
+              <ActivityIcon className="w-5 h-5 text-blue-400" />
               Attività Recenti
             </CardTitle>
           </CardHeader>

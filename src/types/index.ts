@@ -98,6 +98,7 @@ export interface Habit {
   category: Category;
   emoji: string | null;
   target_per_week: number;
+  active?: boolean;
   created_at: string;
 }
 
@@ -117,4 +118,16 @@ export interface Goal {
   category: Category | null;
   year: number;
   created_at: string;
+}
+
+export interface WheelOfLife {
+  id: string;
+  date: string;
+  anima: number;
+  mente: number;
+  cuore: number;
+  corpo: number;
+  abito: number;
+  portafoglio: number;
+  created_at?: string;
 }

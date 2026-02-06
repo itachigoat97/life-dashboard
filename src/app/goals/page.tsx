@@ -12,8 +12,8 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { useData } from "@/lib/data-context";
 import { CATEGORIES, Category } from "@/types";
-import { mockGoals, getWheelOfLifeData } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { Target, TrendingUp, Award } from "lucide-react";
 
@@ -38,8 +38,30 @@ const itemVariants = {
 };
 
 export default function GoalsPage() {
-  const wheelData = getWheelOfLifeData();
-  const goals = mockGoals;
+  const { loading, goals, wheelData } = useData();
+
+  // If loading
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="space-y-2">
+          <div className="h-10 w-56 rounded bg-white/[0.05]" />
+          <div className="h-5 w-48 rounded bg-white/[0.05]" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 rounded-xl bg-white/[0.05]" />
+          ))}
+        </div>
+        <div className="h-[500px] rounded-xl bg-white/[0.05]" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-48 rounded-xl bg-white/[0.05]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // Calculate summary stats
   const totalGoals = goals.length;
@@ -76,14 +98,11 @@ export default function GoalsPage() {
   );
 
   // Format wheel data for chart with emoji and name
-  const formattedWheelData = wheelData.map((item) => {
-    const categoryInfo = CATEGORIES[item.category as Category];
-    return {
-      ...item,
-      name: `${categoryInfo.emoji} ${categoryInfo.name}`,
-      originalCategory: item.category,
-    };
-  });
+  const formattedWheelData = wheelData.map((item) => ({
+    ...item,
+    name: `${CATEGORIES[item.category as Category].emoji} ${CATEGORIES[item.category as Category].name}`,
+    originalCategory: item.category,
+  }));
 
   return (
     <motion.div

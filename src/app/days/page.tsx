@@ -2,14 +2,16 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useData } from "@/lib/data-context";
 import { CATEGORIES, Category } from "@/types";
-import { mockDays, getActivitiesForDay } from "@/lib/mock-data";
 import { formatDate } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { CalendarDays, Zap, ChevronRight } from "lucide-react";
+import { CalendarDays, Zap, ChevronRight, Plus } from "lucide-react";
 import Link from "next/link";
 
 export default function DaysPage() {
+  const { loading, days } = useData();
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -53,6 +55,22 @@ export default function DaysPage() {
     return "shadow-emerald-500/20";
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="h-8 w-64 rounded bg-white/[0.05] animate-pulse" />
+            <div className="h-4 w-96 rounded bg-white/[0.05] animate-pulse" />
+          </div>
+        </div>
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-40 rounded-xl bg-white/[0.05] animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <motion.div
@@ -61,14 +79,28 @@ export default function DaysPage() {
         transition={{ duration: 0.5, ease: "easeOut" as const }}
         className="space-y-2"
       >
-        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-          <CalendarDays className="w-8 h-8 text-amber-400" />
-          Registro Giorni
-        </h1>
-        <p className="text-white/60">Visualizza e analizza i tuoi giorni registrati</p>
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+              <CalendarDays className="w-8 h-8 text-amber-400" />
+              Registro Giorni
+            </h1>
+            <p className="text-white/60">Visualizza e analizza i tuoi giorni registrati</p>
+          </div>
+          <Link href="/days/new">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 text-black font-semibold hover:from-amber-400 hover:to-amber-500 transition-all shadow-lg shadow-amber-500/20"
+            >
+              <Plus className="w-5 h-5" />
+              Nuovo Giorno
+            </motion.button>
+          </Link>
+        </div>
       </motion.div>
 
-      {mockDays.length === 0 ? (
+      {days.length === 0 ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -89,8 +121,8 @@ export default function DaysPage() {
           animate="visible"
           className="space-y-4"
         >
-          {mockDays.map((day) => {
-            const activities = getActivitiesForDay(day.id);
+          {days.map((day) => {
+            const activities = day.activities || [];
 
             return (
               <motion.div key={day.id} variants={itemVariants}>
