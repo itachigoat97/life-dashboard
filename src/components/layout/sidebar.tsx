@@ -8,6 +8,7 @@ import {
   CalendarDays,
   Target,
   Repeat,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   Sparkles,
@@ -20,6 +21,7 @@ const navItems = [
   { href: "/days", label: "Registro", icon: CalendarDays },
   { href: "/habits", label: "Abitudini", icon: Repeat },
   { href: "/goals", label: "Obiettivi", icon: Target },
+  { href: "/monthly-goals", label: "Mensili", icon: BarChart3 },
 ];
 
 export function Sidebar() {

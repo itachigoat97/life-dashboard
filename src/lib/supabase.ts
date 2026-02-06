@@ -5,6 +5,7 @@ import {
   Habit,
   HabitLog,
   Goal,
+  MonthlyGoal,
   Category,
   WheelOfLife,
 } from "@/types";
@@ -173,6 +174,127 @@ export async function getGoals(year?: number): Promise<Goal[]> {
   const { data, error } = await query;
   if (error) throw error;
   return (data as Goal[]) ?? [];
+}
+
+// ── Monthly Goals ────────────────────────────────────
+
+export async function fetchMonthlyGoals(
+  month: number,
+  year: number
+): Promise<MonthlyGoal[]> {
+  const { data, error } = await supabase
+    .from("monthly_goals")
+    .select("*")
+    .eq("month", month)
+    .eq("year", year)
+    .order("category", { ascending: true })
+    .order("title", { ascending: true });
+
+  if (error) throw error;
+  return (data as MonthlyGoal[]) ?? [];
+}
+
+export async function updateMonthlyGoal(
+  id: string,
+  updates: Partial<Pick<MonthlyGoal, "current_value" | "status" | "title" | "description" | "target_value" | "unit">>
+): Promise<MonthlyGoal> {
+  const { data, error } = await supabase
+    .from("monthly_goals")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as MonthlyGoal;
+}
+
+export async function createMonthlyGoal(
+  goal: Omit<MonthlyGoal, "id" | "created_at" | "updated_at">
+): Promise<MonthlyGoal> {
+  const { data, error } = await supabase
+    .from("monthly_goals")
+    .insert(goal)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as MonthlyGoal;
+}
+
+export async function deleteMonthlyGoal(id: string): Promise<void> {
+  const { error } = await supabase
+    .from("monthly_goals")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function getMonthlyStats(
+  month: number,
+  year: number
+): Promise<{
+  total: number;
+  completed: number;
+  in_progress: number;
+  pending: number;
+  failed: number;
+  completionRate: number;
+}> {
+  const goals = await fetchMonthlyGoals(month, year);
+  const total = goals.length;
+  const completed = goals.filter((g) => g.status === "completed").length;
+  const in_progress = goals.filter((g) => g.status === "in_progress").length;
+  const pending = goals.filter((g) => g.status === "pending").length;
+  const failed = goals.filter((g) => g.status === "failed").length;
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return { total, completed, in_progress, pending, failed, completionRate };
+}
+
+export async function getDaysForMonth(
+  month: number,
+  year: number
+): Promise<Day[]> {
+  const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+  const endDate =
+    month === 12
+      ? `${year + 1}-01-01`
+      : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+
+  const { data, error } = await supabase
+    .from("days")
+    .select("*")
+    .gte("date", startDate)
+    .lt("date", endDate)
+    .order("date", { ascending: true });
+
+  if (error) throw error;
+  return (data as Day[]) ?? [];
+}
+
+export async function getWheelOfLifeForMonth(
+  month: number,
+  year: number
+): Promise<WheelOfLife | null> {
+  const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+  const endDate =
+    month === 12
+      ? `${year + 1}-01-01`
+      : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+
+  const { data, error } = await supabase
+    .from("wheel_of_life")
+    .select("*")
+    .gte("date", startDate)
+    .lt("date", endDate)
+    .order("date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as WheelOfLife | null;
 }
 
 // ── Wheel of Life ─────────────────────────────────────

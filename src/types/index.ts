@@ -120,6 +120,21 @@ export interface Goal {
   created_at: string;
 }
 
+export interface MonthlyGoal {
+  id: string;
+  month: number;
+  year: number;
+  title: string;
+  description: string | null;
+  target_value: number | null;
+  current_value: number;
+  unit: string | null;
+  category: Category | null;
+  status: "pending" | "in_progress" | "completed" | "failed";
+  created_at: string;
+  updated_at: string;
+}
+
 export interface WheelOfLife {
   id: string;
   date: string;
